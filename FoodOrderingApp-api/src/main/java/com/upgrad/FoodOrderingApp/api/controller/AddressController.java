@@ -2,8 +2,7 @@ package com.upgrad.FoodOrderingApp.api.controller;
 
 // Address Controller Handles all  the Address related endpoints
 
-import com.upgrad.FoodOrderingApp.api.model.SaveAddressRequest;
-import com.upgrad.FoodOrderingApp.api.model.SaveAddressResponse;
+import com.upgrad.FoodOrderingApp.api.model.*;
 import com.upgrad.FoodOrderingApp.service.businness.AddressService;
 import com.upgrad.FoodOrderingApp.service.businness.CustomerService;
 import com.upgrad.FoodOrderingApp.service.entity.AddressEntity;
@@ -18,6 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -63,4 +64,41 @@ public class AddressController {
         final SaveAddressResponse saveAddressResponse = new SaveAddressResponse().id(createdAddress.getUuid()).status("ADDRESS SUCCESSFULLY REGISTERED");
         return new ResponseEntity<>(saveAddressResponse, HttpStatus.CREATED);
     }
+
+     /*  The method handles get all Address  request.It takes the authorization
+         & produces response in AddressListResponse and returns list of Customer Address .If error Return error code and error Message.
+          */
+
+    @RequestMapping(method = RequestMethod.GET, path = "/address/customer", produces = MediaType.APPLICATION_JSON_UTF8_VALUE, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<AddressListResponse> getAllSavedAddress(@RequestHeader("authorization") final String authorization) throws AuthorizationFailedException {
+
+        //Access the accessToken from the request Header
+        String[] authorizationData = authorization.split("Bearer ");
+        String userAccessToken = authorizationData[1];
+
+        //Calls customerService getCustomer Method to check the validity of the customer.this methods returns the customerEntity  to be get all address.
+        CustomerEntity customerEntity = customerService.getCustomer(userAccessToken);
+
+        List<AddressEntity> sortedAddress = addressService.getAllAddress(customerEntity);
+
+        //List<CustomerAddressEntity> customerAddressEntityList = addressService.getAllAddress(bearerToken[1]);
+        AddressListResponse addressListResponses = new AddressListResponse();
+
+        List<AddressList> addressesList = new ArrayList<>();
+
+        //Looping in for each address in the addressEntities & then Created AddressList using the each address data and adds to addressLists.
+        for(AddressEntity addressEntity: sortedAddress) {
+            AddressListState addressListState = new AddressListState().id(UUID.fromString(addressEntity.getState().getUuid())).stateName(addressEntity.getState().getStateName());
+            AddressList addressList = new AddressList().id(UUID.fromString(addressEntity.getUuid()))
+                    .flatBuildingName(addressEntity.getFlat_buil_number()).locality(addressEntity.getLocality())
+                    .city(addressEntity.getCity()).pincode(addressEntity.getPincode()).state(addressListState);
+            //AddressListResponse addressListResponse = new AddressListResponse().addAddressesItem(addressList);
+            addressesList.add(addressList);
+        }
+        addressListResponses.addresses(addressesList);
+
+        return new ResponseEntity<AddressListResponse>(addressListResponses, HttpStatus.OK);
+    }
+
+
 }

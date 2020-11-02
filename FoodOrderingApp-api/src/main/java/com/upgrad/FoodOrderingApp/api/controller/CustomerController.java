@@ -140,7 +140,7 @@ public class CustomerController {
         return new ResponseEntity<UpdateCustomerResponse>(updateCustomerResponse, HttpStatus.OK);
     }
 
-    git merge <newbranch>      /* This method is to updateCustomerPassword the customer using oldPassword,newPassword & customerEntity and return the CustomerEntity .
+     /* This method is to updateCustomerPassword the customer using oldPassword,newPassword & customerEntity and return the CustomerEntity .
      If error throws exception with error code and error message.
      */
 

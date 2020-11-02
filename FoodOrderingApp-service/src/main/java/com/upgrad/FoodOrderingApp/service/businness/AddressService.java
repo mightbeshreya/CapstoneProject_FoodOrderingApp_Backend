@@ -1,9 +1,12 @@
 package com.upgrad.FoodOrderingApp.service.businness;
 
 import com.upgrad.FoodOrderingApp.service.dao.AddressDao;
+import com.upgrad.FoodOrderingApp.service.dao.CustomerAddressDao;
 import com.upgrad.FoodOrderingApp.service.dao.CustomerDao;
 import com.upgrad.FoodOrderingApp.service.dao.StateDao;
 import com.upgrad.FoodOrderingApp.service.entity.AddressEntity;
+import com.upgrad.FoodOrderingApp.service.entity.CustomerAddressEntity;
+import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.entity.StateEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AddressNotFoundException;
 import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
@@ -28,6 +31,9 @@ public class AddressService {
 
     @Autowired
     StateDao stateDao;
+
+    @Autowired
+    CustomerAddressDao customerAddressDao;
 
     /* This method is to saveAddress.Takes the Address and state entity and saves the Address to the DB.
         If error throws exception with error code and error message.
@@ -54,6 +60,20 @@ public class AddressService {
             throw new AddressNotFoundException("ANF-002", "No state by this id");
         }
         return stateEntity;
+    }
+
+    //To get Address By Customer
+    @Transactional(propagation = Propagation.REQUIRED)
+    public List<AddressEntity> getAllAddress(CustomerEntity customerEntity) throws AuthorizationFailedException {
+        // List of Customer Address - Adding into Address Entity List
+        List<CustomerAddressEntity> customerAddressEntity = customerAddressDao.getAddressByCustomer(customerEntity);
+        List<AddressEntity> addressEntityList = new ArrayList<>();
+        for (CustomerAddressEntity cae : customerAddressEntity) {
+            AddressEntity addressEntity = cae.getAddress();
+            addressEntityList.add(addressEntity);
+        }
+        return addressEntityList;
+
     }
 
 }
