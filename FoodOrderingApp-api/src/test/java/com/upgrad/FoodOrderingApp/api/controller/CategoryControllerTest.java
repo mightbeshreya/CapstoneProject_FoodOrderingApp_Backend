@@ -1,4 +1,4 @@
-/* package com.upgrad.FoodOrderingApp.api.controller;
+package com.upgrad.FoodOrderingApp.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.upgrad.FoodOrderingApp.api.model.CategoriesListResponse;
@@ -16,7 +16,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-
+import static org.junit.Assert.assertEquals;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -139,4 +139,4 @@ public class CategoryControllerTest {
 
 
 }
-*/
+
