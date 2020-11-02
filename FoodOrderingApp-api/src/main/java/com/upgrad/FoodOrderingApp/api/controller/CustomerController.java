@@ -140,4 +140,32 @@ public class CustomerController {
         return new ResponseEntity<UpdateCustomerResponse>(updateCustomerResponse, HttpStatus.OK);
     }
 
+      /* This method is to updateCustomerPassword the customer using oldPassword,newPassword & customerEntity and return the CustomerEntity .
+     If error throws exception with error code and error message.
+     */
+
+    @RequestMapping(method = RequestMethod.PUT, path = "/customer/password", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<UpdatePasswordResponse> updatePassword(@RequestHeader("authorization") final String authorization,
+                                                                 @RequestBody(required = false) UpdatePasswordRequest updatePasswordRequest )
+            throws AuthorizationFailedException, UpdateCustomerException{
+        /* If Old or new password is empty, throw error */
+        if(updatePasswordRequest.getNewPassword().isEmpty() || updatePasswordRequest.getOldPassword().isEmpty()) {
+            throw new UpdateCustomerException("UCR-003", "No field should be empty");
+        }
+        /* Decoding Authorization to get access token and USername and Password */
+        String[] authorizationData = authorization.split("Bearer ");
+        String userAccessToken = authorizationData[1];
+        /* Sending Customer Entity To Update Password */
+        CustomerEntity customerEntity = customerService.getCustomer(userAccessToken);
+
+        String newPassword = updatePasswordRequest.getNewPassword();
+        String oldPassword = updatePasswordRequest.getOldPassword();
+        CustomerEntity updatedCustomerEntity = customerService.updateCustomerPassword(oldPassword, newPassword, customerEntity);
+        /* Sending UpdatePasswordResponse */
+        UpdatePasswordResponse updatePasswordResponse = new UpdatePasswordResponse().id(updatedCustomerEntity.getUuid())
+                .status("CUSTOMER PASSWORD UPDATED SUCCESSFULLY");
+        return new ResponseEntity<UpdatePasswordResponse>(updatePasswordResponse, HttpStatus.OK);
+    }
+
+
 }

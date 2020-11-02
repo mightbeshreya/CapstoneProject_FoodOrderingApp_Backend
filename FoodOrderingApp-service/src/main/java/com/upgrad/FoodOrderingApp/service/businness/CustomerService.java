@@ -6,6 +6,7 @@ import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
+import com.upgrad.FoodOrderingApp.service.exception.UpdateCustomerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -164,4 +165,31 @@ public class CustomerService {
         return updatedCustomer;
     }
 
+    @Transactional(propagation = Propagation.REQUIRED)
+    public CustomerEntity updateCustomerPassword(String oldPassword, String updatePassword, CustomerEntity customerEntity)
+            throws UpdateCustomerException {
+
+         if(!checkForPasswordStrength(updatePassword)) {
+            throw new UpdateCustomerException("UCR-001", "Weak password!");
+        }
+        final String encryptedPassword = passwordCryptographyProvider.encrypt(oldPassword, customerEntity.getSalt());
+        if(!encryptedPassword.equals(customerEntity.getPassword())) {
+
+            throw new UpdateCustomerException("UCR-004", "Incorrect old password!");
+        }
+        String[] encryptedText = passwordCryptographyProvider.encrypt(updatePassword);
+        customerEntity.setSalt(encryptedText[0]);
+        customerEntity.setPassword(encryptedText[1]);
+        CustomerEntity updatedPaswordCustomer = customerDao.updatePassword(customerEntity);
+        return updatedPaswordCustomer;
+    }
+    private boolean checkForPasswordStrength (String pass) {
+        String regex = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#$%^&-+=()])(?=\\S+$).{8,}$";
+        Pattern pattern = Pattern.compile(regex);
+        if (pass == null) {
+            return false;
+        }
+        Matcher m = pattern.matcher(pass);
+        return m.matches();
+    }
 }
