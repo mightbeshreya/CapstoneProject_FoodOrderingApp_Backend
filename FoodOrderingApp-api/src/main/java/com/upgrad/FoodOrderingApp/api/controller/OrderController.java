@@ -142,4 +142,82 @@ public class OrderController {
     }
 
 
+    /* The method handles save Order request.It takes authorization from the header and other details in SaveOrderRequest.
+        & produces response in SaveOrderResponse and returns UUID and successful message and if error returns error code and error Message.
+        */
+    @RequestMapping(method = RequestMethod.POST, path = "/order", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<SaveOrderResponse> saveOrder(@RequestHeader("authorization") final String authorization,
+                                                       @RequestBody(required = false) final SaveOrderRequest saveOrderRequest)
+            throws AuthorizationFailedException, CouponNotFoundException, AddressNotFoundException,
+            PaymentMethodNotFoundException, RestaurantNotFoundException, ItemNotFoundException
+    {
+
+        //Access the accessToken from the request Header
+        String[] authorizationData = authorization.split("Bearer ");
+        String userAccessToken = authorizationData[1];
+
+        //Calls customerService getCustomerMethod to check the validity of the customer.this methods returns the customerEntity.
+        CustomerEntity customerEntity = customerService.getCustomer(userAccessToken);
+
+        OrderEntity orderEntity = new OrderEntity();
+        orderEntity.setUuid(UUID.randomUUID().toString());
+        orderEntity.setBill(saveOrderRequest.getBill().doubleValue());
+        orderEntity.setDate(new Date());
+        orderEntity.setCustomer(customerEntity);
+        String couponUuid = saveOrderRequest.getCouponId().toString();
+        if(couponUuid!=null) {
+            CouponEntity couponEntity = orderService.getCouponByCouponId(couponUuid);
+            orderEntity.setCoupon(couponEntity);
+        }else {
+            orderEntity.setCoupon(null);
+        }
+        BigDecimal discount = saveOrderRequest.getDiscount();
+        if(discount!=null) {
+            orderEntity.setDiscount(discount.doubleValue());
+        }else {
+            orderEntity.setDiscount(BigDecimal.ZERO.doubleValue());
+        }
+
+        String paymentUuid = saveOrderRequest.getPaymentId().toString();
+        if(paymentUuid!=null) {
+            PaymentEntity paymentEntity = paymentService.getPaymentByUUID(paymentUuid);
+            orderEntity.setPayment(paymentEntity);
+        }else {
+            orderEntity.setPayment(null);
+        }
+
+        String addressUuid = saveOrderRequest.getAddressId();
+
+        AddressEntity addressEntity = addressService.getAddressByUUID(addressUuid, customerEntity);
+        orderEntity.setAddress(addressEntity);
+
+        String restaurantUuid = saveOrderRequest.getRestaurantId().toString();
+
+        RestaurantEntity restaurantEntity = restaurantService.restaurantByUUID(restaurantUuid);
+        orderEntity.setRestaurant(restaurantEntity);
+
+        List<ItemQuantity> itemList = saveOrderRequest.getItemQuantities();
+
+        List<OrderItemEntity> orderItemEntityList = new ArrayList<>();
+
+        OrderEntity savedOrderEntity = orderService.saveOrder(orderEntity);
+
+        for(ItemQuantity itemQuantity: itemList) {
+            OrderItemEntity orderedItem = new OrderItemEntity();
+            ItemEntity itemEntity = itemService.getItemByUuid(itemQuantity.getItemId().toString());
+            orderedItem.setItem(itemEntity);
+            orderedItem.setOrder(savedOrderEntity);
+            orderedItem.setQuantity(itemQuantity.getQuantity());
+            orderedItem.setPrice(itemQuantity.getPrice());
+            orderItemEntityList.add(orderedItem);
+            orderService.saveOrderItem(orderedItem);
+        }
+
+        //Creating the SaveOrderResponse for the endpoint containing UUID and success message.
+        SaveOrderResponse saveOrderResponse = new SaveOrderResponse().id(savedOrderEntity.getUuid())
+                .status("ORDER SUCCESSFULLY PLACED");
+        return new ResponseEntity<SaveOrderResponse>(saveOrderResponse, HttpStatus.CREATED);
+    }
+
 }
