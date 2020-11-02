@@ -32,9 +32,22 @@ public class CustomerDao {
         }
     }
 
+
     //To create Authority token
     public CustomerAuthEntity createAuthToken(CustomerAuthEntity customerAuthTokenEntity) {
         entityManager.persist(customerAuthTokenEntity);
-        return customerAuthTokenEntity;
+         return customerAuthTokenEntity;
+    }
+    //To update customer log out
+    public void updateCustomerLogoutAt(final CustomerAuthEntity customerAuthToken) {
+        entityManager.merge(customerAuthToken);
+    }
+    // To get user auth Token
+    public CustomerAuthEntity getUserAuthToken(final String accessToken) {
+        try {
+            return entityManager.createNamedQuery("customerAuthTokenByAccessToken", CustomerAuthEntity.class).setParameter("accessToken", accessToken).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 }

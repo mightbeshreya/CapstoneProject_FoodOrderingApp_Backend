@@ -1,12 +1,14 @@
 package com.upgrad.FoodOrderingApp.api.controller;
 
 import com.upgrad.FoodOrderingApp.api.model.LoginResponse;
+import com.upgrad.FoodOrderingApp.api.model.LogoutResponse;
 import com.upgrad.FoodOrderingApp.api.model.SignupCustomerRequest;
 import com.upgrad.FoodOrderingApp.api.model.SignupCustomerResponse;
 import com.upgrad.FoodOrderingApp.service.businness.CustomerService;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerAuthEntity;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
+import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -95,5 +97,22 @@ public class CustomerController {
         } catch (Exception e) {
             throw new AuthenticationFailedException("ATH-003", "Incorrect format of decoded customer name and password");
         }
+    }
+    /* This method handles the customer logout ,It takes the Bearer accessToken from authorization in the header and logs out the customer
+    and returns a LogoutResponse conatining UUID of customer and the successful message.If error returns the error code with corresponding Message.
+     */
+    @RequestMapping(method = RequestMethod.POST, path = "/customer/logout", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<LogoutResponse> logout(@RequestHeader("authorization") final String authorization)
+            throws AuthorizationFailedException {
+        /* Decoding Authorization to get access token and username and password */
+        String[] authorizationData = authorization.split(" ");
+        String accessToken = authorizationData[1];
+        /* Sending Access Token For Logging Out  */
+        CustomerAuthEntity customerAuthEntity = new CustomerAuthEntity();
+        customerAuthEntity = customerService.logout(accessToken);
+        CustomerEntity customer = customerAuthEntity.getCustomer();
+        /* Sending Logout Response */
+        LogoutResponse authorizedLogoutResponse = new LogoutResponse().id(customer.getUuid()).message("LOGGED OUT SUCCESSFULLY");
+        return new ResponseEntity<LogoutResponse>(authorizedLogoutResponse,  HttpStatus.OK);
     }
 }
