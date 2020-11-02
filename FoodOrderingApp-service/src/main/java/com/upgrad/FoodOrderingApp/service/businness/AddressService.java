@@ -109,5 +109,9 @@ public class AddressService {
         List<StateEntity> allStates = stateDao.getAllStates();
         return allStates;
     }
+    /* Get Address by Address UUID from Datatbase */
+    public AddressEntity getAddressById(String id) {
+        return addressDao.getAddressByUUID(id);
+    }
 
 }
