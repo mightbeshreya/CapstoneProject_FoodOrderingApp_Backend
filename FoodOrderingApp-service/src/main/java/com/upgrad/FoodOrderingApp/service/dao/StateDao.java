@@ -24,4 +24,15 @@ public class StateDao {
             return null;
         }
     }
+    /* Get all states in Database */
+    public List<StateEntity> getAllStates() {
+        try {
+            return entityManager.createNamedQuery("getAllStates", StateEntity.class).getResultList();
+            /*Query query = entityManager.createNamedQuery("getStateByUUID");
+            return new ArrayList<StateEntity>(query.getResultList()); */
+        } catch (NoResultException nre) {
+            return null;
+        }
+    }
+
 }

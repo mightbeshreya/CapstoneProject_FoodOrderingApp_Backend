@@ -76,4 +76,38 @@ public class AddressService {
 
     }
 
+    /* Delete Address */
+    public AddressEntity deleteAddress(AddressEntity addressEntity)  {
+        return addressDao.deleteAddress(addressEntity);
+    }
+
+    /* Get Address from Database through Address UUID */
+    public AddressEntity getAddressByUUID(String addressUuid, CustomerEntity customerEntity)
+            throws AddressNotFoundException, AuthorizationFailedException{
+        /* Address UUID should not be null */
+        if(addressUuid==null || addressUuid.isEmpty()){
+            throw new AddressNotFoundException("ANF-005", "Address id can not be empty");
+        }
+        /* If Address Entity not found in Database, throw error, otherwise check for Address belongs to customer or not
+         * If yes, return AddressEntity back
+         *
+         * If no, throw Exception
+         * */
+        AddressEntity addressEntity = addressDao.getAddressByUUID(addressUuid);
+        if(addressEntity == null ){
+            throw new AddressNotFoundException("ANF-003", "No address by this id");
+        }
+        CustomerAddressEntity customerAddressEntity = customerAddressDao.getSingleAddress(addressEntity);
+        if(!customerEntity.getId().equals(customerAddressEntity.getCustomer().getId())) {
+            throw new AuthorizationFailedException("ATHR-004", "You are not authorized to view/update/delete any one else's address");
+        }
+        return addressEntity;
+    }
+
+    /* Get All States present in Database */
+    public List<StateEntity> getAllStates(){
+        List<StateEntity> allStates = stateDao.getAllStates();
+        return allStates;
+    }
+
 }

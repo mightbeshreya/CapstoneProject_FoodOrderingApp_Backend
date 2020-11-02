@@ -41,4 +41,15 @@ public class AddressDao {
             return false;
         return p.matcher(pinCode).matches();
     }
+    //To delete the Address.
+    @Transactional(propagation = Propagation.REQUIRED)
+    public AddressEntity deleteAddress(AddressEntity addressEntity) {
+        try {
+            entityManager.remove(addressEntity);
+            return addressEntity;
+        } catch (NoResultException nre) {
+            return null;
+        }
+    }
+
 }
