@@ -1,15 +1,13 @@
 package com.upgrad.FoodOrderingApp.api.controller;
 
-import com.upgrad.FoodOrderingApp.api.model.LoginResponse;
-import com.upgrad.FoodOrderingApp.api.model.LogoutResponse;
-import com.upgrad.FoodOrderingApp.api.model.SignupCustomerRequest;
-import com.upgrad.FoodOrderingApp.api.model.SignupCustomerResponse;
+import com.upgrad.FoodOrderingApp.api.model.*;
 import com.upgrad.FoodOrderingApp.service.businness.CustomerService;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerAuthEntity;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
+import com.upgrad.FoodOrderingApp.service.exception.UpdateCustomerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -115,4 +113,31 @@ public class CustomerController {
         LogoutResponse authorizedLogoutResponse = new LogoutResponse().id(customer.getUuid()).message("LOGGED OUT SUCCESSFULLY");
         return new ResponseEntity<LogoutResponse>(authorizedLogoutResponse,  HttpStatus.OK);
     }
+    /* This method handles the customer details update request. Takes the request as UpdateCustomerRequest and produces UpdateCustomerResponse containing the details of the updated Customer.
+    If error returns the error code with corresponding Message.
+     */
+    @RequestMapping(method = RequestMethod.PUT, path = "/customer", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<UpdateCustomerResponse> updateCustomer(@RequestHeader("authorization") final String authorization,
+                                                                 @RequestBody(required = false) UpdateCustomerRequest updateCustomerRequest)
+            throws AuthorizationFailedException, UpdateCustomerException {
+        /* FirstName Field Should not be empty in  UpdateCustomerRequest*/
+        if(updateCustomerRequest.getFirstName().isEmpty()) {
+            throw new UpdateCustomerException("UCR-002", "First name field should not be empty");
+        }
+        /* Decoding Authorization to get access token and username and password */
+        String[] authorizationData = authorization.split("Bearer ");
+        String userAccessToken = authorizationData[1];
+        /* Sending Customer Entity For Updating Customer Entity Details in Database */
+        CustomerEntity customerEntity = customerService.getCustomer(userAccessToken);
+
+        customerEntity.setFirstName(updateCustomerRequest.getFirstName());
+        customerEntity.setLastName(updateCustomerRequest.getLastName());
+
+        CustomerEntity updateCustomer = customerService.updateCustomer(customerEntity);
+        /* Sending UpdateCustomerResponse */
+        UpdateCustomerResponse updateCustomerResponse = new UpdateCustomerResponse().id(updateCustomer.getUuid()).firstName(updateCustomer.getFirstname()).lastName(updateCustomer.getLastname())
+                .status("CUSTOMER DETAILS UPDATED SUCCESSFULLY");
+        return new ResponseEntity<UpdateCustomerResponse>(updateCustomerResponse, HttpStatus.OK);
+    }
+
 }

@@ -50,4 +50,18 @@ public class CustomerDao {
             return null;
         }
     }
+    //To check auth token
+    public CustomerAuthEntity checkAuthToken(String accessToken) {
+        try {
+            return entityManager.createNamedQuery("getToken", CustomerAuthEntity.class).setParameter("accessToken", accessToken).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
+    }
+    //To update customer datils
+    public CustomerEntity updateCustomerDetails(CustomerEntity customerEntity) {
+        entityManager.merge(customerEntity);
+        return customerEntity;
+    }
+
 }
