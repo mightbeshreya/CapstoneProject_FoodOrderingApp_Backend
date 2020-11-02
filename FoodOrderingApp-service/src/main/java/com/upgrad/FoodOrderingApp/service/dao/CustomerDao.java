@@ -69,4 +69,14 @@ public class CustomerDao {
         return updatedCustomerPassword;
     }
 
+    //To get customer by Uuid
+    public CustomerEntity getCustomerByUuid(String customerUuid) {
+        try {
+            CustomerEntity customer = entityManager.createNamedQuery("userByUuid", CustomerEntity.class).setParameter("uuid", customerUuid).getSingleResult();
+            return customer;
+        } catch (NoResultException nre) {
+            return null;
+        }
+    }
+
 }
