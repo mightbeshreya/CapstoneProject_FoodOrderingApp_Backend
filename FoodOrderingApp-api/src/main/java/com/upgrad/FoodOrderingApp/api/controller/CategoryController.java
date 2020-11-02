@@ -59,6 +59,31 @@ public class CategoryController {
         }
     }
 
+    /* Get Category by Category UUID by taking it as Path Variable */
+    @RequestMapping(method = RequestMethod.GET, path = "/category/{category_id}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<CategoryDetailsResponse> getCategoryById(@PathVariable(value = "category_id") final String categoryUuid) throws CategoryNotFoundException {
 
+        /* Getting Category Entity By Category UUID */
+        CategoryEntity categoryEntity = categoryService.getCategoryById(categoryUuid);
+        /* Get Items From Category Foiund */
+        List<ItemEntity> itemEntities = categoryEntity.getItems();
+        /* Add Item Entities from the category to List of Item List  Model*/
+        List<ItemList> itemLists = new LinkedList<>();
+        itemEntities.forEach(itemEntity -> {
+            ItemList itemList = new ItemList()
+                    .id(UUID.fromString(itemEntity.getUuid()))
+                    .price(itemEntity.getPrice())
+                    .itemName(itemEntity.getItemName())
+                    .itemType(ItemList.ItemTypeEnum.fromValue(itemEntity.getType().getValue()));
+            itemLists.add(itemList);
+        });
+
+        /* Sending Category Details into categoryDetailsResponse model and returning the response */
+        CategoryDetailsResponse categoryDetailsResponse = new CategoryDetailsResponse()
+                .categoryName(categoryEntity.getCategoryName())
+                .id(UUID.fromString(categoryEntity.getUuid()))
+                .itemList(itemLists);
+        return new ResponseEntity<CategoryDetailsResponse>(categoryDetailsResponse, HttpStatus.OK);
+    }
 
 }
